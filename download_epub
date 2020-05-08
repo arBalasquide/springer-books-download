@@ -2,7 +2,7 @@
 
 URL='http://link.springer.com/download/epub/10.1007/'
 BOOKPATH="epubbooks"
-> not_found # create empty file in case script runs multiple times
+> not_foundepub # create empty file in case script runs multiple times
 mkdir -p $BOOKPATH
 
 while read p; do
@@ -21,7 +21,7 @@ while read p; do
             curl -L "$URL$DOWNLOAD_URL" --output "$BOOKPATH/$TITLE.epub"
         else
             printf "Did not find epub version of '$TITLE'\n\n"
-            echo $TITLE >> not_found
+            echo $TITLE >> not_foundepub
         fi
     fi
 
