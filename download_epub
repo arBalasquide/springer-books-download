@@ -1,0 +1,29 @@
+#!/bin/bash
+
+URL='http://link.springer.com/download/epub/10.1007/'
+BOOKPATH="epubbooks"
+> not_found # create empty file in case script runs multiple times
+mkdir -p $BOOKPATH
+
+while read p; do
+     curl -sL $p > tmp_file
+    ISBN=$(cut -d "=" -f3 <<< $p)
+    TITLE=$(grep -m1 "<h1>" tmp_file | sed -e 's/<h1>//g' -e 's_</h1>__g' | tr -d ' ')
+    if curl -L --output /dev/null --silent --head --fail "$URL$ISBN.epub"
+    then
+        curl -L "$URL$ISBN.epub" --output "$BOOKPATH/$TITLE.epub"
+    else
+        DOWNLOAD_URL=$(grep "class=\"c-button c-button__icon-right test-bookepub-link\"" \
+            tmp_file | grep -Eo -m 1 'href="[^\"]+"' | sed -e s/href=//g -e s/\"//g -e s_/download/epub/10.1007%2F__g)
+        echo $URL$DOWNLOAD_URL
+        if curl -L --output /dev/null --silent --head --fail "$URL$DOWNLOAD_URL"
+        then
+            curl -L "$URL$DOWNLOAD_URL" --output "$BOOKPATH/$TITLE.epub"
+        else
+            printf "Did not find epub version of '$TITLE'\n\n"
+            echo $TITLE >> not_found
+        fi
+    fi
+
+done <links.txt
+
